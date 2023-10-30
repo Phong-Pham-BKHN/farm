@@ -1,0 +1,57 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<div id="map" style="width: 100%; height: 800px;"></div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.1.0/dist/leaflet.draw.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var map = L.map('map').setView([51.505, -0.09], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        var drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems,
+                edit: false,
+            },
+            draw: {
+                polygon: true,
+                marker: false,
+                circle: false,
+                rectangle: false,
+                polyline: false,
+            },
+        });
+        map.addControl(drawControl);
+
+        map.on(L.Draw.Event.CREATED, function (event) {
+            var layer = event.layer;
+            drawnItems.addLayer(layer);
+            updatePolygonJson();
+        });
+
+        // function updatePolygonJson() {
+        //   var polygonJSON = drawnItems.toGeoJSON();
+        //   var polygonJSONString = JSON.stringify(polygonJSON, null, 2);
+        //   var blob = new Blob([`var polygonJSON = ${polygonJSONString};`], { type: 'text/javascript' });
+
+        //   var link = document.createElement('a');
+        //   link.href = URL.createObjectURL(blob);
+        //   link.download = 'map.js';
+        //   link.click();
+        // }
+
+        function updatePolygonJson() {
+            var geojson = drawnItems.toGeoJSON();
+            var geojson_string = JSON.stringify(geojson);
+            const fs = require('fs');
+            fs.writeFileSync('map.js', 'var geojson = ' + geojson_string + ';', 'utf-8');
+        }
+    });
+
+</script>
